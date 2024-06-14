@@ -55,7 +55,8 @@ gene_dotplot_odds_ratio <- function(table, gene) {
       log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
       log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5)
     ) %>%
-
+    filter(!str_detect(contrast, "(HRD-Other) effect|Undetermined|Other"))
+  
   # Create odds ratio plot
   p_odds_ratio <- plot_data %>%
     ggplot(aes(x = cell_type, y = forcats::fct_rev(contrast), color = log2.odds.ratio, size = -log10(p.value))) +
@@ -108,6 +109,10 @@ gene_dotplot_odds_ratio <- function(table, gene) {
       strip.text = element_blank()
     ) +
     guides(fill = "none")
+  
+  # Define color palette
+  color_palette <- brewer.pal(11, "Spectral")
+  color_palette <- rep(color_palette, each = ceiling(22 / 11))[1:22]
   
   # Create cluster annotation plot
   p_cluster_anno <- plot_data %>%

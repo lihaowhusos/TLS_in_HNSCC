@@ -10,7 +10,7 @@ rm(list=ls())
 setwd("XXX")
 
 # Read data
-rt <- read.csv("XXX/Bulk_RNA_cell2location_20240202.csv", sep=",", header=TRUE, check.names=FALSE)
+rt <- read.csv("XXX/Bulk_RNA_20240202.csv", sep=",", header=TRUE, check.names=FALSE)
 names(rt)[1] <- "Id"
 
 # Filter data

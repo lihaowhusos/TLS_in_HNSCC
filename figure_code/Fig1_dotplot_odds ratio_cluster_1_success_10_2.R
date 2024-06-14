@@ -11,7 +11,6 @@ library(cowplot)
 scrna_cell_tbl <- read.csv('XXX/adata.obs.csv', header = TRUE)
 rownames(scrna_cell_tbl) <- as.vector(as.matrix(scrna_cell_tbl[,1]))
 
-
 # Data tidying
 scrna_cell_tbl$barcode <- scrna_cell_tbl[,1]
 scrna_cell_tbl <- scrna_cell_tbl[,-1]

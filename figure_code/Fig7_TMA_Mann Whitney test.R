@@ -2,7 +2,6 @@ library(tidyverse)
 library(ggplot2)
 
 # Set working directory and seed
-setwd("XXX")
 set.seed(20240207) # Ensure reproducibility
 
 # Read data
