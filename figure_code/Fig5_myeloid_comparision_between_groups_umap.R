@@ -1,209 +1,88 @@
 library(dplyr)
-library(tidyverse) 
-library(magrittr)
-library(Seurat)
-library(readxl)
-library(cowplot)
-library(viridis)
-library(grid)
-library(rlang)
+library(tidyr)
 library(ggplot2)
+library(scales)
+library(Seurat)
+library(stringr)
 library(ggrastr)
 
-
-
-################### function definition####################
-kde2d_tidy <- function(data_tbl, kernel_group, kernel_subset,  
-                       n = 200, h = 0.4) {
-  
-  data_tbl <- filter(data_tbl, kernel_group %in% kernel_subset)
-  x <- as.numeric(data_tbl$umap_1)
-  y <- as.numeric(data_tbl$umap_2)
-  kde_data <- MASS::kde2d(x, y, n = n, h = h) 
-  var <- as.name(kernel_group)
-  result_tbl <- kde_data$z %>% 
-    as.data.frame() %>% 
-    as_tibble(rownames = "x") %>% 
-    gather(y, value, -x) %>% 
+# Custom function: Kernel density estimation
+kernel_density_estimation <- function(data, group_var, subset_var, grid_points = 200, bandwidth = 0.4) {
+  filtered_data <- filter(data, {{group_var}} %in% subset_var)
+  x <- as.numeric(filtered_data$umap_1)
+  y <- as.numeric(filtered_data$umap_2)
+  density_data <- MASS::kde2d(x, y, n = grid_points, h = bandwidth)
+  result <- density_data$z %>%
+    as.data.frame() %>%
+    as_tibble(rownames = "x") %>%
+    pivot_longer(cols = -x, names_to = "y", values_to = "value") %>%
     mutate(y = str_remove_all(y, "V") %>% as.numeric,
            x = as.numeric(x)) %>%
-    mutate(var := paste0(kernel_subset, collapse = "_"),
+    mutate(subset = paste0(subset_var, collapse = "_"),
            x = scales::rescale(x),
            y = scales::rescale(y))
-  return(result_tbl)
-  
+  return(result)
 }
 
-
-
-kde2d_contrast <- function(data_tbl, kernel_group, kernel_subsets_a, kernel_subsets_b, 
-                           n = 200, h = 0.2, quench = 0.015) { #################change quench
+# Custom function: Kernel density contrast
+kernel_density_contrast <- function(data, group_var, subset_a, subset_b, grid_points = 200, bandwidth = 0.2, quench_factor = 0.015) {
+  density_a <- kernel_density_estimation(data, {{group_var}}, subset_a, grid_points, bandwidth)
+  density_b <- kernel_density_estimation(data, {{group_var}}, subset_b, grid_points, bandwidth)
   
-  kernel_a <- kde2d_tidy(data_tbl, kernel_group, kernel_subsets_a, n = n, h = h)
-  kernel_b <- kde2d_tidy(data_tbl, kernel_group, kernel_subsets_b, n = n, h = h)
-  
-  kernel_tbl <- kernel_a %>% 
-    left_join(kernel_b, by = c("x", "y")) %>% 
-    mutate(value = value.x - value.y) %>% 
-    mutate(delta_group = value > 0) %>% 
-    group_by(delta_group) %>% 
-    mutate(value_quenched = ifelse(value > quench, quench, ifelse(value < -quench, -quench, value))) %>% 
-    mutate(value_scaled = ifelse(delta_group, scales::rescale(value_quenched, c(0, 2)), scales::rescale(value_quenched, c(-2, 0)))) %>% 
+  contrast_data <- density_a %>%
+    left_join(density_b, by = c("x", "y")) %>%
+    mutate(value = value.x - value.y) %>%
+    mutate(delta_group = value > 0) %>%
+    group_by(delta_group) %>%
+    mutate(value_quenched = ifelse(value > quench_factor, quench_factor, ifelse(value < -quench_factor, -quench_factor, value))) %>%
+    mutate(value_scaled = ifelse(delta_group, scales::rescale(value_quenched, c(0, 2)), scales::rescale(value_quenched, c(-2, 0)))) %>%
     ungroup()
   
-  return(kernel_tbl)
+  return(contrast_data)
 }
 
+# Load data
+load("XXX/Myeloid_after_seurat.Rdata")
 
-
-
-########################## Read data ###################
-cluster_type = 'Myeloid'
-
-file <- paste0('g:/TLSdata/TLS_total_data/Processing data/subset/',cluster_type,'/',cluster_type,'_after_seurat.Rdata') 
-load(file)
-
-###########regroup############
-combined.sct@meta.data$group <- combined.sct@meta.data$sample
-combined.sct@meta.data$group <- recode(combined.sct@meta.data$group, 
-                                       'szj105988'= 'immature',
-                                       'szj106005'= 'none',
-                                       'szj106495'= 'none',
-                                       'szj106560'= 'immature',                
-                                       'szj106562'= 'mature',
-                                       'szj107010'= 'mature',
-                                       'szj107145'= 'mature',
-                                       'szj107734'= 'mature',
-                                       'szj107849'= 'none',
-                                       'szj108352'= 'immature',
-                                       'szj106121'= 'mature',                  
-                                       'szj106138'= 'immature',                  
-                                       'szj106759'= 'none',
-                                       'szj106771'= 'mature'
-)
-
-
-
-#### table ###########
-table = combined.sct@reductions$umap@cell.embeddings %>% 
+# Create data table
+data_table <- combined.sct@reductions$umap@cell.embeddings %>%
   as.data.frame() %>%
   cbind(group = combined.sct@meta.data$group)
 
+# Scale UMAP coordinates
+data_table$umapscaled_1 <- scales::rescale(data_table$umap_1)
+data_table$umapscaled_2 <- scales::rescale(data_table$umap_2)
 
+# Compute kernel density contrast
+contrast_mature <- kernel_density_contrast(data_table, group, c("mature"), c("immature", "none")) %>%
+  filter(value_quenched > 0.0001 | value_quenched < -0.0001)
 
+contrast_immature <- kernel_density_contrast(data_table, group, c("immature"), c("mature", "none")) %>%
+  filter(value_quenched > 0.0001 | value_quenched < -0.0001)
 
-##### plot_data_sub ########
-plot_data_sub = table
-plot_data_sub$umapscaled_1 = scales::rescale(plot_data_sub$umap_1)
-plot_data_sub$umapscaled_2 = scales::rescale(plot_data_sub$umap_2)
+contrast_none <- kernel_density_contrast(data_table, group, c("none"), c("mature", "immature")) %>%
+  filter(value_quenched > 0.0001 | value_quenched < -0.0001)
 
+# Plot UMAP
+plot_umap <- function(contrast_data, title) {
+  ggplot() +
+    ggrastr::geom_point_rast(aes(umapscaled_1, umapscaled_2), color = "grey80", size = 0.01, alpha = 0.02, data = data_table) +
+    ggrastr::geom_point_rast(aes(x, y, color = value_scaled), data = contrast_data, size = 0.01) +
+    scale_color_gradientn(colors = c("#2166AC", "#67A9CF", "#D1E5F0", "#FFFFFF", "#FDDBC7", "#EF8A62", "#B2182B"),
+                          values = scales::rescale(c(min(contrast_data$value_scaled), 0, max(contrast_data$value_scaled)))) +
+    guides(color = guide_colorbar(label.position = "right", title.position = "top", title.hjust = 0, title.vjust = 1, direction = "vertical")) +
+    theme_bw() +
+    theme(panel.grid = element_blank(),
+          aspect.ratio = 1,
+          legend.key.height = unit(0.05, "npc"),
+          legend.key.width = unit(0.03, "npc"),
+          legend.position = c(-0.1, 0.95),
+          legend.justification = c("left", "top"),
+          plot.title = element_text(hjust = 0.5, vjust = 0.5, face = "plain", size = 18)) +
+    labs(color = paste0("Enrichment\nin ", title))
+}
 
-
-
-
-###########kernel_table#############
-kernel_tbl_m <- kde2d_contrast(
-  data_tbl = table, kernel_group = table$group,
-  kernel_subsets_a = c("mature"), kernel_subsets_b = c("immature", "none")
-) %>%   filter(value_quenched > 0.0001 | value_quenched < -0.0001)
-
-kernel_tbl_im <- kde2d_contrast(
-  data_tbl = table, kernel_group = table$group,
-  kernel_subsets_a = c("immature"), kernel_subsets_b = c("mature", "none")
-) %>%   filter(value_quenched > 0.0001 | value_quenched < -0.0001)
-
-kernel_tbl_n <- kde2d_contrast(
-  data_tbl = table, kernel_group = table$group,
-  kernel_subsets_a = c("none"), kernel_subsets_b = c("mature", "immature")
-) %>%   filter(value_quenched > 0.0001 | value_quenched < -0.0001)
-
-
-
-
-###########kernel_umap_manual#############
-kernel_umap_m <- ggplot() +
-  ggrastr::geom_point_rast(aes(umapscaled_1, umapscaled_2), color = "grey80", size = 0.01, alpha = 0.02,
-                           data = plot_data_sub) +
-  ggrastr::geom_point_rast(aes(x, y, color = value_scaled), data = kernel_tbl_m, size = 0.01) +
-  
-  scale_color_gradientn(colours = c("#2166AC", "#67A9CF", "#D1E5F0", "#FFFFFF", "#FDDBC7", "#EF8A62", "#B2182B"),
-                        values = scales::rescale(c(min(kernel_tbl_m$value_scaled), 0,
-                                                   max(kernel_tbl_m$value_scaled)))) +
-  guides(color = guide_colorbar(label.position = "right",
-                                title.position = "top",
-                                title.hjust = 0,
-                                title.vjust = 1,
-                                direction = "vertical")) +
-  theme_bw()+
-  theme(panel.grid=element_blank())+
-  theme(aspect.ratio = 1,
-        legend.key.height = unit(0.05, "npc"),
-        legend.key.width = unit(0.03, "npc"),
-        legend.position = c(-0.1, 0.95),
-        legend.justification = c("left", "top"),
-        plot.title = element_text(hjust = 0.5, vjust = 0.5, face = "plain", size = 18)) + 
-  labs(color = "Enrichment\nin mature"
-  ) 
-
-kernel_umap_im <- ggplot() +
-  ggrastr::geom_point_rast(aes(umapscaled_1, umapscaled_2), color = "grey80", size = 0.01, alpha = 0.02,
-                           data = plot_data_sub) +
-  ggrastr::geom_point_rast(aes(x, y, color = value_scaled), data = kernel_tbl_im, size = 0.01) +
-  
-  scale_color_gradientn(colours = c("#2166AC", "#67A9CF", "#D1E5F0", "#FFFFFF", "#FDDBC7", "#EF8A62", "#B2182B"),
-                        values = scales::rescale(c(min(kernel_tbl_im$value_scaled), 0,
-                                                   max(kernel_tbl_im$value_scaled)))) +
-  guides(color = guide_colorbar(label.position = "right",
-                                title.position = "top",
-                                title.hjust = 0,
-                                title.vjust = 1,
-                                direction = "vertical")) +
-  theme_bw()+
-  theme(panel.grid=element_blank())+
-  theme(aspect.ratio = 1,
-        legend.key.height = unit(0.05, "npc"),
-        legend.key.width = unit(0.03, "npc"),
-        legend.position = c(-0.1, 0.95),
-        legend.justification = c("left", "top"),
-        plot.title = element_text(hjust = 0.5, vjust = 0.5, face = "plain", size = 18)) + 
-  labs(color = "Enrichment\nin mature"
-  ) 
-
-
-
-kernel_umap_n <- ggplot() +
-  ggrastr::geom_point_rast(aes(umapscaled_1, umapscaled_2), color = "grey80", size = 0.01, alpha = 0.02,
-                           data = plot_data_sub) +
-  ggrastr::geom_point_rast(aes(x, y, color = value_scaled), data = kernel_tbl_n, size = 0.01) +
-  
-  scale_color_gradientn(colours = c("#2166AC", "#67A9CF", "#D1E5F0", "#FFFFFF", "#FDDBC7", "#EF8A62", "#B2182B"),
-                        values = scales::rescale(c(min(kernel_tbl_n$value_scaled), 0,
-                                                   max(kernel_tbl_n$value_scaled)))) +
-  guides(color = guide_colorbar(label.position = "right",
-                                title.position = "top",
-                                title.hjust = 0,
-                                title.vjust = 1,
-                                direction = "vertical")) +
-  theme_bw()+
-  theme(panel.grid=element_blank())+
-  theme(aspect.ratio = 1,
-        legend.key.height = unit(0.05, "npc"),
-        legend.key.width = unit(0.03, "npc"),
-        legend.position = c(-0.1, 0.95),
-        legend.justification = c("left", "top"),
-        plot.title = element_text(hjust = 0.5, vjust = 0.5, face = "plain", size = 18)) + 
-  labs(color = "Enrichment\nin mature"
-  ) 
-
-
-########### save figure ################
-getwd()
-
-
-ggsave(paste0('G:/TLSdata/TLS_total_data/figures/enrichment_UMAP/',cluster_type,'_mature.pdf') ,plot = kernel_umap_m,width = 6, height = 5)
-ggsave(paste0('G:/TLSdata/TLS_total_data/figures/enrichment_UMAP/',cluster_type,'_immature.pdf') ,plot = kernel_umap_im,width = 6, height = 5)
-ggsave(paste0('G:/TLSdata/TLS_total_data/figures/enrichment_UMAP/',cluster_type,'_none.pdf') ,plot = kernel_umap_n,width = 6, height = 5)
-
-
-
-
+# Save images
+ggsave("XXX/enrichment_UMAP/Myeloid_mature_new.pdf", plot = plot_umap(contrast_mature, "mature"), width = 6, height = 5)
+ggsave("XXX/enrichment_UMAP/Myeloid_immature_new.pdf", plot = plot_umap(contrast_immature, "immature"), width = 6, height = 5)
+ggsave("XXX/enrichment_UMAP/Myeloid_none_new.pdf", plot = plot_umap(contrast_none, "none"), width = 6, height = 5)
