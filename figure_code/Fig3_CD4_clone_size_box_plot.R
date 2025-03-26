@@ -5,23 +5,6 @@ library(dplyr)
 # Read data
 data <- read.csv('XXX/CD4_T_and_Treg_clone_id_group.csv', header = TRUE)
 
-# Recode and factorize the group column
-data$group <- recode(data$sample, 
-                     'szj105988' = 'immature',
-                     'szj106005' = 'none',
-                     'szj106495' = 'none',
-                     'szj106560' = 'immature',                
-                     'szj106562' = 'mature',
-                     'szj107010' = 'mature',
-                     'szj107145' = 'mature',
-                     'szj107734' = 'mature',
-                     'szj107849' = 'none',
-                     'szj108352' = 'immature',
-                     'szj106121' = 'mature',                  
-                     'szj106138' = 'immature',                  
-                     'szj106759' = 'none',
-                     'szj106771' = 'mature')
-
 data$group <- factor(data$group, ordered = TRUE, levels = c("mature", "immature", "none"))
 
 # Define colors
@@ -57,22 +40,6 @@ ggsave("XXX/CD4_T_clone_size.pdf", plot = p_all, width = 10, height = 4)
 # Treg Analysis
 data <- read.csv('XXX/CD4_T_and_Treg_clone_id_group.csv', header = TRUE)
 
-data$group <- recode(data$sample, 
-                     'szj105988' = 'immature',
-                     'szj106005' = 'none',
-                     'szj106495' = 'none',
-                     'szj106560' = 'immature',                
-                     'szj106562' = 'mature',
-                     'szj107010' = 'mature',
-                     'szj107145' = 'mature',
-                     'szj107734' = 'mature',
-                     'szj107849' = 'none',
-                     'szj108352' = 'immature',
-                     'szj106121' = 'mature',                  
-                     'szj106138' = 'immature',                  
-                     'szj106759' = 'none',
-                     'szj106771' = 'mature')
-
 data$group <- factor(data$group, ordered = TRUE, levels = c("mature", "immature", "none"))
 
 # Create Treg plots
@@ -92,22 +59,6 @@ ggsave("XXX/CD4_Treg_clone_size.pdf", plot = p_all, width = 10, height = 4)
 
 # Statistical Analysis
 data <- read.csv('XXX/CD4_T_and_Treg_clone_id_group.csv', header = TRUE)
-
-data$group <- recode(data$sample, 
-                     'szj105988' = 'immature',
-                     'szj106005' = 'none',
-                     'szj106495' = 'none',
-                     'szj106560' = 'immature',                
-                     'szj106562' = 'mature',
-                     'szj107010' = 'mature',
-                     'szj107145' = 'mature',
-                     'szj107734' = 'mature',
-                     'szj107849' = 'none',
-                     'szj108352' = 'immature',
-                     'szj106121' = 'mature',                  
-                     'szj106138' = 'immature',                  
-                     'szj106759' = 'none',
-                     'szj106771' = 'mature')
 
 data$group <- factor(data$group, ordered = TRUE, levels = c("mature", "immature", "none"))
 
