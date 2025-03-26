@@ -34,7 +34,7 @@ img_grob <- rasterGrob(img, interpolate = FALSE, width = unit(1, "npc"), height 
 
 # Normalize cell data
 cell = "B_GC_11"
-cell1 = "CD4_T_fh_01_00"
+cell1 = "CD4_T_early_exhausted_06"
 spatial_coord[,cell] = spatial_coord[,cell] / max(spatial_coord[,cell])
 spatial_coord[,cell1] = spatial_coord[,cell1] / max(spatial_coord[,cell1])
 
@@ -42,7 +42,7 @@ spatial_coord[,cell1] = spatial_coord[,cell1] / max(spatial_coord[,cell1])
 scatterpie_plt <- ggplot() +   
   annotation_custom(grob = img_grob, xmin = 0, xmax = ncol(img), ymin = 0, ymax = -nrow(img)) +
   geom_point(data = spatial_coord, aes(x = imagecol_scaled, y = imagerow_scaled, size = B_GC_11, alpha = B_GC_11), color = 'yellow') + 
-  geom_point(data = spatial_coord, aes(x = imagecol_scaled, y = imagerow_scaled, size = CD4_T_fh_01_00, alpha = CD4_T_fh_01_00), color = 'blue') +
+  geom_point(data = spatial_coord, aes(x = imagecol_scaled, y = imagerow_scaled, size = CD4_T_early_exhausted_06, alpha = CD4_T_early_exhausted_06), color = 'blue') +
   scale_y_reverse() + ylim(nrow(img), 0) + xlim(0, ncol(img)) + 
   theme_half_open(11, rel_small = 1) + theme_void() + 
   coord_fixed(ratio = 1) +
