@@ -13,20 +13,6 @@ df <- df %>%
   filter(str_starts(group, "CD4")) %>%
   filter(grepl("^CD4", group))
 
-custom_order <- c("CD4_T_fh_01_00",
-                  "CD4_T_naive_1_01",
-                  "CD4_T_naive_2_03",
-                  "CD4_T_early_exhausted_06",
-                  "CD4_T_late_exhausted_08",
-                  "CD4_T_ISG",
-                  "CD4_T_reg_naive_07",
-                  "CD4_T_reg_1_04",
-                  "CD4_T_reg_2_05",
-                  "CD4_T_reg_3_10",
-                  "CD4_T_reg_exhausted_01_02",
-                  "CD4_T_reg_exhausted_02_09",
-                  "CD4_T_reg_ISG")
-
 df$group <- factor(df$group, levels = custom_order)
 df <- df[order(df$group),]
 
