@@ -7,7 +7,7 @@ library(cowplot)     # For combining plots
 
 ## Load data --------------------------------------
 cell_type = 'Myeloid'
-data_file = paste0('G:/TLSdata/TLS_total_data/Processing data/subset/',cell_type,'/',cell_type,'_for_seurat_metadata.csv')
+data_file = paste0('path/',cell_type,'/',cell_type,'_for_seurat_metadata.csv')
 cell_data_tbl <- read.csv(data_file, header = TRUE)
 rownames(cell_data_tbl) <- as.vector(as.matrix(cell_data_tbl[, 1]))
 
