@@ -7,24 +7,6 @@ library(scatterpie)
 # Read data
 data <- read.csv('XXX/CD8_clone_id_group.csv', header = TRUE)
 
-# Recode sample groups
-data$group <- recode(data$sample, 
-                     'szj105988' = 'immature',
-                     'szj106005' = 'none',
-                     'szj106495' = 'none',
-                     'szj106560' = 'immature',                
-                     'szj106562' = 'mature',
-                     'szj107010' = 'mature',
-                     'szj107145' = 'mature',
-                     'szj107734' = 'mature',
-                     'szj107849' = 'none',
-                     'szj108352' = 'immature',
-                     'szj106121' = 'mature',                  
-                     'szj106138' = 'immature',                  
-                     'szj106759' = 'none',
-                     'szj106771' = 'mature'
-)
-
 # Define names of interest
 names <- c("CD8_T_naive_01",
            "CD8_T_effector_memory_01",
