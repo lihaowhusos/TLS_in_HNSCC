@@ -10,25 +10,6 @@ library(cowplot)     # For combining plots
 cell_data_tbl <- read.csv('path/spatial_obs_for_R.csv',header = TRUE)
 rownames(cell_data_tbl) <- as.vector(as.matrix(cell_data_tbl[, 1]))
 
-#### Re-group samples ########
-cell_data_tbl$group <- recode(cell_data_tbl$sample, 
-                              'szj105988'= 'immature',
-                              'szj106005'= 'none',
-                              'szj106495'= 'none',
-                              'szj106560'= 'immature',                
-                              'szj106562'= 'mature',
-                              'szj107010'= 'mature',
-                              'szj107145'= 'mature',
-                              'szj107734'= 'mature',
-                              'szj107849'= 'none',
-                              'szj108352'= 'immature',
-                              'szj106121'= 'mature',                  
-                              'szj106138'= 'immature',                  
-                              'szj106759'= 'none',
-                              'szj106771'= 'mature'
-)
-
-
 
 # Prepare barcode column and remove first column (ID column)
 cell_data_tbl$barcode <- cell_data_tbl[, 1]
