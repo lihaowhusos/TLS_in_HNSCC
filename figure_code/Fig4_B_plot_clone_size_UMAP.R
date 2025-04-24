@@ -6,23 +6,6 @@ library(ggrepel)
 BCR_table <- read.csv('XXX/plot_clone_size_UMAP_for_R.csv', header = TRUE)
 BCR_table$clone_id_size10 <- BCR_table$clone_id_size * 10
 
-# Recode sample groups
-BCR_table$group <- recode(BCR_table$sample, 
-                          'szj105988' = 'immature',
-                          'szj106005' = 'none',
-                          'szj106495' = 'none',
-                          'szj106560' = 'immature',                
-                          'szj106562' = 'mature',
-                          'szj107010' = 'mature',
-                          'szj107145' = 'mature',
-                          'szj107734' = 'mature',
-                          'szj107849' = 'none',
-                          'szj108352' = 'immature',
-                          'szj106121' = 'mature',                  
-                          'szj106138' = 'immature',                  
-                          'szj106759' = 'none',
-                          'szj106771' = 'mature')
-
 # Subset data by group
 BCR_table_immature <- subset(BCR_table, group == 'immature')
 BCR_table_mature <- subset(BCR_table, group == 'mature')
