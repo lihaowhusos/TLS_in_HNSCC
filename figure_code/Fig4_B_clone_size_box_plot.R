@@ -4,22 +4,6 @@ library(ggpubr)
 # Load data
 data <- read.csv('XXX/BCR_clone_id_group.csv', header = TRUE)
 
-# Recode and factorize the group variable
-data$group <- recode(data$sample, 
-                     'szj105988' = 'immature',
-                     'szj106005' = 'none',
-                     'szj106495' = 'none',
-                     'szj106560' = 'immature',                
-                     'szj106562' = 'mature',
-                     'szj107010' = 'mature',
-                     'szj107145' = 'mature',
-                     'szj107734' = 'mature',
-                     'szj107849' = 'none',
-                     'szj108352' = 'immature',
-                     'szj106121' = 'mature',                  
-                     'szj106138' = 'immature',                  
-                     'szj106759' = 'none',
-                     'szj106771' = 'mature')
 
 data$group <- factor(data$group, ordered = TRUE, levels = c("mature", "immature", "none"))
 
