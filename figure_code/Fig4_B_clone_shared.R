@@ -7,23 +7,6 @@ library(scatterpie)
 # Read data
 data <- read.csv('XXX/BCR_clone_id_group.csv', header = TRUE)
 
-# Recode groups
-data$group <- recode(data$sample, 
-                     'szj105988' = 'immature',
-                     'szj106005' = 'none',
-                     'szj106495' = 'none',
-                     'szj106560' = 'immature',                
-                     'szj106562' = 'mature',
-                     'szj107010' = 'mature',
-                     'szj107145' = 'mature',
-                     'szj107734' = 'mature',
-                     'szj107849' = 'none',
-                     'szj108352' = 'immature',
-                     'szj106121' = 'mature',                  
-                     'szj106138' = 'immature',                  
-                     'szj106759' = 'none',
-                     'szj106771' = 'mature'
-)
 
 # Define clone names
 clone_names <- c("B_IGHM_04", "B_CD74_1_00", "B_CD69_1_01", "B_MHC_II_05", "B_GC_11", 
