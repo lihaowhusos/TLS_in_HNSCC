@@ -88,20 +88,6 @@ gene_dotplot_odds_ratio <-function(table,gene){
     mutate(log2.odds.ratio = ifelse(log2.odds.ratio > 1.5, 1.5, log2.odds.ratio),
            log2.odds.ratio = ifelse(log2.odds.ratio < -1.5, -1.5, log2.odds.ratio))
   
-  ## Custom ordering for factors
-  cell_type_order <- c("T_NK", 
-                       "B", 
-                       "Plasma_cell",
-                       "Myeloid_cell",
-                       "Neutrophil",
-                       "Mast_cell",
-                       "Endothelial_cell",
-                       "Lymphatic_endothelial_cell",
-                       "Fibroblast",
-                       "Pericytes",
-                       "Cancer_cell")
-  plot_data$cell_type <- factor(plot_data$cell_type, levels = cell_type_order)
-  plot_data <- plot_data[order(plot_data$cell_type),]
   
   contrast_order <- c("mature", "immature", "none")
   plot_data$contrast <- factor(plot_data$contrast, levels = contrast_order)
