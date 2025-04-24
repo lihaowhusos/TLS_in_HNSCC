@@ -44,24 +44,6 @@ kernel_density_contrast <- function(data, group_var, subset_a, subset_b, grid_po
 # Load data
 load("XXX/T_NK_after_seurat.Rdata")
 
-# Re-grouping
-combined.sct@meta.data$group <- combined.sct@meta.data$sample
-combined.sct@meta.data$group <- recode(combined.sct@meta.data$group,
-                                       'szj105988' = 'immature',
-                                       'szj106005' = 'none',
-                                       'szj106495' = 'none',
-                                       'szj106560' = 'immature',
-                                       'szj106562' = 'mature',
-                                       'szj107010' = 'mature',
-                                       'szj107145' = 'mature',
-                                       'szj107734' = 'mature',
-                                       'szj107849' = 'none',
-                                       'szj108352' = 'immature',
-                                       'szj106121' = 'mature',
-                                       'szj106138' = 'immature',
-                                       'szj106759' = 'none',
-                                       'szj106771' = 'mature')
-
 # Create data table
 data_table <- combined.sct@reductions$umap@cell.embeddings %>%
   as.data.frame() %>%
